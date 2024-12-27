@@ -1,0 +1,226 @@
+# Google Map Scraper Project Plan
+
+## Project Overview
+A Google Maps Scraper tool that enables authenticated users to search for local businesses, save their information, and manage interactions. The application features a unified interface with authentication, search functionality, and business data management.
+
+## System Architecture
+
+### 1. Frontend Architecture
+
+#### Authentication Page ('/'):
+- **Initial View (Unauthenticated Users):**
+  - Login/Register Toggle Form
+  - Form Fields:
+    - Login:
+      - Username/Email
+      - Password
+      - Submit Button
+    - Register:
+      - Username
+      - Email
+      - Password
+      - Confirm Password
+      - Submit Button
+  - Form Validation
+  - Error Messages Display
+
+#### Main Application ('/'):
+- **Protected View (Authenticated Users Only):**
+  - Navigation Bar:
+    - User Profile
+    - Logout Button
+  
+  - Search Section:
+    - Search Bar:
+      - Accepts query string or Google Maps URL
+      - Search Button
+      - Loading State Indicator
+    
+    - Search History:
+      - List of previous searches
+      - Per Search Entry:
+        - Query Text
+        - Timestamp
+        - Results Count
+        - Email Status
+        - Actions:
+          - "View Results"
+          - "Re-run Search"
+    
+    - Results Drawer:
+      - Business List:
+        - Business Details:
+          - Business Name
+          - Email
+          - Website
+          - Email Status
+        - Bulk Selection
+        - "Mark as Sent" Action
+      - Pagination/Infinite Scroll
+
+### 2. Backend Architecture
+
+#### Authentication System
+1. **Register API**
+   - Endpoint: `/api/register`
+   - Method: POST
+   - Payload:
+     ```json
+     {
+       "username": "string",
+       "email": "string",
+       "password": "string"
+     }
+     ```
+   - Response: JWT Token
+
+2. **Login API**
+   - Endpoint: `/api/login`
+   - Method: POST
+   - Payload:
+     ```json
+     {
+       "username": "string",
+       "password": "string"
+     }
+     ```
+   - Response: JWT Token
+
+3. **Logout API**
+   - Endpoint: `/api/logout`
+   - Method: POST
+   - Authentication: Required
+   - Action: Invalidate Token
+
+#### Business Search System
+1. **Search API**
+   - Endpoint: `/api/search`
+   - Method: POST
+   - Authentication: Required
+   - Payload:
+     ```json
+     {
+       "query": "string",
+       "page": "number",
+       "limit": "number"
+     }
+     ```
+   - Response:
+     ```json
+     {
+       "businesses": [
+         {
+           "business_id": "string",
+           "name": "string",
+           "email": "string",
+           "website": "string",
+           "phone": "string",
+           "email_sent_status": "boolean"
+         }
+       ],
+       "total": "number",
+       "page": "number"
+     }
+     ```
+
+2. **Search History API**
+   - Endpoint: `/api/search_history`
+   - Method: GET
+   - Authentication: Required
+   - Query Parameters:
+     - page
+     - limit
+   - Response:
+     ```json
+     {
+       "searches": [
+         {
+           "search_id": "string",
+           "query": "string",
+           "timestamp": "datetime",
+           "results_count": "number",
+           "email_status": "string"
+         }
+       ],
+       "total": "number",
+       "page": "number"
+     }
+     ```
+
+3. **Mark Email Status API**
+   - Endpoint: `/api/mark`
+   - Method: POST
+   - Authentication: Required
+   - Payload:
+     ```json
+     {
+       "business_ids": ["string"],
+       "notes": "string"
+     }
+     ```
+
+### 3. Database Models
+
+#### User Model
+```python
+class User(AbstractUser):
+    email = EmailField(unique=True)
+    created_at = DateTimeField(auto_now_add=True)
+    updated_at = DateTimeField(auto_now=True)
+```
+
+#### Search Model
+```python
+class Search(Model):
+    user = ForeignKey(User, on_delete=CASCADE)
+    query = CharField(max_length=255)
+    timestamp = DateTimeField(auto_now_add=True)
+    results_count = IntegerField(default=0)
+```
+
+#### Business Model
+```python
+class Business(Model):
+    search = ForeignKey(Search, on_delete=CASCADE)
+    business_id = CharField(max_length=100, unique=True)
+    name = CharField(max_length=255)
+    email = EmailField(null=True, blank=True)
+    website = URLField(null=True, blank=True)
+    phone = CharField(max_length=50, null=True, blank=True)
+    email_sent_status = BooleanField(default=False)
+    email_sent_date = DateTimeField(null=True, blank=True)
+    notes = TextField(null=True, blank=True)
+    created_at = DateTimeField(auto_now_add=True)
+    updated_at = DateTimeField(auto_now=True)
+```
+
+## Development Guidelines
+
+### Frontend Development
+- Use React with TypeScript
+- Implement Redux Toolkit for state management
+- Use TailwindCSS for styling
+- Implement proper form validation
+- Handle loading and error states
+- Use proper authentication guards
+- Implement proper TypeScript interfaces
+
+### Backend Development
+- Follow Django REST framework best practices
+- Implement proper authentication middleware
+- Use Celery for background tasks
+- Implement proper error handling
+- Add comprehensive API documentation
+- Follow PEP 8 style guide
+- Implement proper validation
+
+### Security Considerations
+- Implement JWT authentication
+- Secure API endpoints
+- Implement rate limiting
+- Handle CORS properly
+- Sanitize user inputs
+- Implement proper error handling
+- Use environment variables for sensitive data
+
+
