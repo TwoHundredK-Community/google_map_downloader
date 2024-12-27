@@ -5,12 +5,12 @@ class BusinessSerializer(serializers.ModelSerializer):
     class Meta:
         model = Business
         fields = [
-            'id', 'business_id', 'name', 'email', 'website', 'phone',
+            'id', 'uuid', 'business_id', 'name', 'email', 'website', 'phone',
             'address', 'category', 'rating', 'reviews_count',
-            'email_sent_status', 'email_sent_date', 'notes',
+            'latitude', 'longitude', 'place_id',
             'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'uuid', 'created_at', 'updated_at']
 
 
 class SearchSerializer(serializers.ModelSerializer):
@@ -18,5 +18,8 @@ class SearchSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Search
-        fields = ['id', 'query', 'timestamp', 'results_count', 'businesses']
-        read_only_fields = ['id', 'timestamp', 'results_count'] 
+        fields = [
+            'id', 'uuid', 'query', 'timestamp', 'results_count', 
+            'is_completed', 'last_updated', 'businesses'
+        ]
+        read_only_fields = ['id', 'uuid', 'timestamp', 'last_updated'] 

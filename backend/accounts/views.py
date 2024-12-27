@@ -4,8 +4,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, get_user_model
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
+
+User = get_user_model()
 
 class RegisterView(generics.CreateAPIView):
     """
@@ -43,13 +45,14 @@ class LoginView(APIView):
         serializer.is_valid(raise_exception=True)
         
         user = authenticate(
-            username=serializer.validated_data['username'],
+            request,
+            email=serializer.validated_data['email'],
             password=serializer.validated_data['password']
         )
         
         if user is None:
             return Response({
-                'error': 'Invalid username or password'
+                'detail': 'Invalid email or password'
             }, status=status.HTTP_401_UNAUTHORIZED)
 
         # Generate tokens
