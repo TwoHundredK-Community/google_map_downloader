@@ -1,4 +1,4 @@
-# Google Maps Scraper
+# Google Map Downloader
 
 A web application that allows users to search for local businesses on Google Maps, save their information, and manage interactions.
 

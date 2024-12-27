@@ -4,6 +4,7 @@ import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import AuthService, { LoginCredentials, RegisterCredentials } from '../services/auth';
 
 const { TabPane } = Tabs;
 
@@ -11,31 +12,43 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = async (values: any) => {
+  const handleLogin = async (values: LoginCredentials) => {
     setLoading(true);
     try {
-      // Mock API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      localStorage.setItem('token', 'mock-token');
+      await AuthService.login(values);
       message.success('Login successful!');
       navigate('/', { replace: true });
-    } catch (error) {
-      message.error('Login failed. Please try again.');
+    } catch (error: any) {
+      if (error.response?.data?.detail) {
+        message.error(error.response.data.detail);
+      } else if (error.response?.data) {
+        // Handle validation errors
+        const errors = Object.values(error.response.data).flat() as string[];
+        message.error(errors[0] || 'Login failed. Please try again.');
+      } else {
+        message.error('Login failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRegister = async (values: any) => {
+  const handleRegister = async (values: RegisterCredentials) => {
     setLoading(true);
     try {
-      // Mock API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      localStorage.setItem('token', 'mock-token');
+      await AuthService.register(values);
       message.success('Registration successful!');
       navigate('/', { replace: true });
-    } catch (error) {
-      message.error('Registration failed. Please try again.');
+    } catch (error: any) {
+      if (error.response?.data) {
+        // Handle validation errors
+        const errors = Object.entries(error.response.data)
+          .map(([field, messages]) => `${field}: ${messages}`)
+          .join('\n');
+        message.error(errors || 'Registration failed. Please try again.');
+      } else {
+        message.error('Registration failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -65,12 +78,15 @@ const Auth = () => {
                 className="px-2"
               >
                 <Form.Item
-                  name="username"
-                  rules={[{ required: true, message: 'Please input your username!' }]}
+                  name="email"
+                  rules={[
+                    { required: true, message: 'Please input your email!' },
+                    { type: 'email', message: 'Please enter a valid email!' }
+                  ]}
                 >
                   <Input
-                    prefix={<UserOutlined className="text-gray-400" />}
-                    placeholder="Username"
+                    prefix={<MailOutlined className="text-gray-400" />}
+                    placeholder="Email"
                     size="large"
                   />
                 </Form.Item>
@@ -109,21 +125,10 @@ const Auth = () => {
                 className="px-2"
               >
                 <Form.Item
-                  name="username"
-                  rules={[{ required: true, message: 'Please input your username!' }]}
-                >
-                  <Input
-                    prefix={<UserOutlined className="text-gray-400" />}
-                    placeholder="Username"
-                    size="large"
-                  />
-                </Form.Item>
-
-                <Form.Item
                   name="email"
                   rules={[
                     { required: true, message: 'Please input your email!' },
-                    { type: 'email', message: 'Please input a valid email!' }
+                    { type: 'email', message: 'Please enter a valid email!' }
                   ]}
                 >
                   <Input
@@ -134,10 +139,24 @@ const Auth = () => {
                 </Form.Item>
 
                 <Form.Item
+                  name="name"
+                  rules={[
+                    { required: true, message: 'Please input your name!' },
+                    { min: 2, message: 'Name must be at least 2 characters!' }
+                  ]}
+                >
+                  <Input
+                    prefix={<UserOutlined className="text-gray-400" />}
+                    placeholder="Full Name"
+                    size="large"
+                  />
+                </Form.Item>
+
+                <Form.Item
                   name="password"
                   rules={[
                     { required: true, message: 'Please input your password!' },
-                    { min: 6, message: 'Password must be at least 6 characters!' }
+                    { min: 2, message: 'Password must be at least 2 characters!' }
                   ]}
                 >
                   <Input.Password
@@ -148,7 +167,7 @@ const Auth = () => {
                 </Form.Item>
 
                 <Form.Item
-                  name="confirmPassword"
+                  name="password2"
                   dependencies={['password']}
                   rules={[
                     { required: true, message: 'Please confirm your password!' },
