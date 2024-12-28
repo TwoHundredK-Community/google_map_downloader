@@ -4,12 +4,6 @@ import uuid
 
 class Search(models.Model):
     """Model to track search queries and their results."""
-    uuid = models.UUIDField(
-        default=uuid.uuid4,
-        editable=False,
-        unique=True,
-        help_text='Unique identifier for the search'
-    )
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -24,7 +18,6 @@ class Search(models.Model):
     query = models.CharField(max_length=255)
     timestamp = models.DateTimeField(auto_now_add=True)
     results_count = models.IntegerField(default=0)
-    is_completed = models.BooleanField(default=False)
     last_updated = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -33,11 +26,10 @@ class Search(models.Model):
         indexes = [
             models.Index(fields=['-timestamp']),
             models.Index(fields=['user']),
-            models.Index(fields=['uuid']),
         ]
 
     def __str__(self):
-        return f"{self.user.username} - {self.query}"
+        return f"{self.user.email} - {self.query}"
 
 
 class Business(models.Model):

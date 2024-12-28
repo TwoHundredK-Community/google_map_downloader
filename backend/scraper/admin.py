@@ -3,11 +3,11 @@ from .models import Search, Business
 
 @admin.register(Search)
 class SearchAdmin(admin.ModelAdmin):
-    list_display = ('query', 'user', 'results_count', 'is_completed', 'timestamp')
-    list_filter = ('is_completed', 'timestamp')
-    search_fields = ('query', 'user__username', 'uuid')
+    list_display = ('query', 'user', 'results_count', 'timestamp')
+    list_filter = ('timestamp',)
+    search_fields = ('query', 'user__email')
     ordering = ('-timestamp',)
-    readonly_fields = ('uuid', 'timestamp', 'last_updated')
+    readonly_fields = ('timestamp', 'last_updated')
     filter_horizontal = ('shared_with',)
 
 @admin.register(Business)

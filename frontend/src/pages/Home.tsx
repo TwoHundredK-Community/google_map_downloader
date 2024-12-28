@@ -1,26 +1,23 @@
 import { useState } from 'react';
-import { Row, Col, Pagination, Button, Input, Table } from 'antd';
+import { Row, Col, Pagination, Button, Input, Table, message } from 'antd';
 import { SearchOutlined, DownloadOutlined } from '@ant-design/icons';
+import api from '../services/api';
 
-// Mock data for demonstration
-const mockBusinesses = [
-  {
-    id: '1',
-    name: 'Ambarukmo Square',
-    email: 'info@ambarukmo.com',
-    website: 'www.ambarukmo.com',
-    phone: '+1 234-567-8900',
-    address: '329 Ambarukmo St, Brooklyn, NY',
-  },
-  {
-    id: '2',
-    name: 'Northwest Village',
-    email: 'contact@northwestvillage.com',
-    website: 'www.northwestvillage.com',
-    phone: '+1 234-567-8901',
-    address: '482 Northwest Ave, Brooklyn, NY',
-  },
-];
+interface Business {
+  id: string;
+  name: string;
+  email: string | null;
+  website: string | null;
+  phone: string | null;
+  address: string | null;
+}
+
+interface SearchResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: Business[];
+}
 
 const columns = [
   {
@@ -37,11 +34,11 @@ const columns = [
     title: 'Website',
     dataIndex: 'website',
     key: 'website',
-    render: (text: string) => (
-      <a href={`https://${text}`} target="_blank" rel="noopener noreferrer">
+    render: (text: string) => text ? (
+      <a href={text.startsWith('http') ? text : `https://${text}`} target="_blank" rel="noopener noreferrer">
         {text}
       </a>
-    ),
+    ) : null,
   },
   {
     title: 'Phone',
@@ -57,6 +54,50 @@ const columns = [
 
 const Home = () => {
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [businesses, setBusinesses] = useState<Business[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [total, setTotal] = useState(0);
+  const pageSize = 50;
+
+  const handleSearch = async (page: number = 1) => {
+    if (!searchQuery.trim()) {
+      message.warning('Please enter a search query');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await api.post<SearchResponse>('/scraper/searches/', {
+        query: searchQuery,
+        page,
+        page_size: pageSize
+      });
+
+      if (response.data.results) {
+        setBusinesses(response.data.results);
+        setTotal(response.data.count);
+        message.success(`Found ${response.data.count} businesses`);
+      }
+    } catch (error: any) {
+      console.error('Search error:', error);
+      message.error(error.response?.data?.detail || 'Failed to perform search');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    handleSearch(page);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      setCurrentPage(1); // Reset to first page on new search
+      handleSearch(1);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -72,12 +113,21 @@ const Home = () => {
               placeholder="Enter location or google maps link..."
               prefix={<SearchOutlined />}
               className="flex-1"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={handleKeyPress}
+              disabled={loading}
             />
             <Button
               type="primary"
               size="large"
               icon={<SearchOutlined />}
               className="bg-primary-500"
+              onClick={() => {
+                setCurrentPage(1);
+                handleSearch(1);
+              }}
+              loading={loading}
             >
               Search
             </Button>
@@ -89,27 +139,30 @@ const Home = () => {
       <div className="bg-white p-6 rounded-lg shadow-sm">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold">
-            Search Results
+            Search Results {total > 0 && `(${total})`}
           </h3>
           <Button
             type="primary"
             icon={<DownloadOutlined />}
             className="bg-primary-500"
+            disabled={businesses.length === 0}
           >
             Download Results
           </Button>
         </div>
 
         <Table
-          dataSource={mockBusinesses}
+          dataSource={businesses}
           columns={columns}
           pagination={{
             current: currentPage,
-            total: 100,
-            onChange: setCurrentPage,
-            pageSize: 10,
+            total: total,
+            onChange: handlePageChange,
+            pageSize: pageSize,
+            showSizeChanger: false,
           }}
           rowKey="id"
+          loading={loading}
         />
       </div>
     </div>

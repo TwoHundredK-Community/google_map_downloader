@@ -19,7 +19,7 @@ class SearchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Search
         fields = [
-            'id', 'uuid', 'query', 'timestamp', 'results_count', 
-            'is_completed', 'last_updated', 'businesses'
+            'id', 'query', 'timestamp', 'results_count', 
+            'last_updated', 'businesses'
         ]
-        read_only_fields = ['id', 'uuid', 'timestamp', 'last_updated'] 
+        read_only_fields = ['id', 'timestamp', 'last_updated', 'results_count'] 

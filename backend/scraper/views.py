@@ -1,15 +1,22 @@
-from django.db import models
+from django.db import models, transaction
 from django.contrib.auth import get_user_model
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.pagination import PageNumberPagination
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from .models import Search, Business
 from .serializers import SearchSerializer, BusinessSerializer
+from .services import GoogleMapsService
 
 User = get_user_model()
+
+class CustomPagination(PageNumberPagination):
+    page_size = 50
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 class SearchViewSet(viewsets.ModelViewSet):
     """
@@ -17,6 +24,7 @@ class SearchViewSet(viewsets.ModelViewSet):
     """
     serializer_class = SearchSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = CustomPagination
 
     def get_queryset(self):
         """
@@ -28,8 +36,57 @@ class SearchViewSet(viewsets.ModelViewSet):
         ).distinct()
 
     def perform_create(self, serializer):
-        """Create a new search for the current user."""
-        serializer.save(user=self.request.user)
+        """
+        Create a new search and fetch results from Google Maps.
+        
+        This method:
+        1. Creates a new search record
+        2. Calls Google Maps API to get business data
+        3. Creates business records for each result
+        4. Updates the search with result count
+        """
+        try:
+            with transaction.atomic():
+                # Create the search record
+                search = serializer.save(user=self.request.user)
+                
+                # Initialize Google Maps service
+                maps_service = GoogleMapsService()
+                
+                # Get search results
+                businesses = maps_service.search_places(search.query)
+                
+                # Create business records
+                business_objects = []
+                for business_data in businesses:
+                    business = Business(
+                        search=search,
+                        **business_data
+                    )
+                    business_objects.append(business)
+                
+                # Bulk create businesses
+                if business_objects:
+                    Business.objects.bulk_create(business_objects)
+                
+                # Update search with results count
+                search.results_count = len(business_objects)
+                search.save()
+
+                # Return paginated results
+                page = self.paginate_queryset(business_objects)
+                if page is not None:
+                    serializer = BusinessSerializer(page, many=True)
+                    return self.get_paginated_response(serializer.data)
+
+                serializer = BusinessSerializer(business_objects, many=True)
+                return Response(serializer.data)
+                
+        except Exception as e:
+            # Log the error (you should configure proper logging)
+            print(f"Error in perform_create: {str(e)}")
+            # Re-raise the exception to be handled by DRF
+            raise
 
     @swagger_auto_schema(
         operation_description="Share a search with other users",

@@ -26,8 +26,8 @@ export interface AuthResponse {
 
 class AuthService {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const response = await api.post('/api/auth/login/', {
-      email: credentials.email,  // Backend expects username field
+    const response = await api.post('/auth/login/', {
+      email: credentials.email,
       password: credentials.password
     });
     if (response.data.tokens) {
@@ -39,8 +39,7 @@ class AuthService {
   }
 
   async register(credentials: RegisterCredentials): Promise<AuthResponse> {
-    const response = await api.post('/api/auth/register/', {
-      username: credentials.email,  // Backend expects username field
+    const response = await api.post('/auth/register/', {
       email: credentials.email,
       name: credentials.name,
       password: credentials.password,
@@ -58,7 +57,7 @@ class AuthService {
     const refreshToken = localStorage.getItem('refreshToken');
     if (refreshToken) {
       try {
-        await api.post('/api/auth/logout/', {
+        await api.post('/auth/logout/', {
           refresh: refreshToken
         });
       } catch (error) {
