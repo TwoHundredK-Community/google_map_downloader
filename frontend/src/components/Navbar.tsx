@@ -40,6 +40,19 @@ const Navbar = ({ isAuthPage = false }: NavbarProps) => {
               Google Map Downloader
             </Link>
           </div>
+          {/* Search Bar and Navigation - Only show when not on auth page */}
+          {!isAuthPage && (
+            <>
+              <div className="flex items-center space-x-4">
+                <Dropdown menu={profileMenu} placement="bottomRight">
+                  <Avatar 
+                    icon={<UserOutlined />} 
+                    className="cursor-pointer hover:opacity-80 bg-white/20 border-2 border-white/30"
+                  />
+                </Dropdown>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </nav>
