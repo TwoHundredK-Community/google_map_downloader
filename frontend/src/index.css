@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  body {
+    @apply bg-gray-50;
+  }
+}
+
 /* Custom styles */
 .ant-btn-primary {
   @apply bg-primary-500 border-primary-500 hover:bg-primary-600 hover:border-primary-600;

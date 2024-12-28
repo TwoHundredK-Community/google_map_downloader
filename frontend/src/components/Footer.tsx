@@ -3,9 +3,6 @@ const Footer = () => {
     <footer className="bg-gradient-to-r from-gray-800 to-gray-900 text-white">
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col items-center space-y-4">
-          <div className="text-2xl font-bold text-primary-400">
-            Google Map Downloader
-          </div>
           <p className="text-gray-400 text-center max-w-2xl">
             A powerful tool to download and manage Google Maps business data.
             Perfect for market research, lead generation, and business analysis.

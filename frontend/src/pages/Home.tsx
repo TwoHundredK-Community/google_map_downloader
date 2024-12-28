@@ -69,7 +69,7 @@ const Home = () => {
           <div className="flex gap-4">
             <Input
               size="large"
-              placeholder="Enter business name or location..."
+              placeholder="Enter location or google maps link..."
               prefix={<SearchOutlined />}
               className="flex-1"
             />
