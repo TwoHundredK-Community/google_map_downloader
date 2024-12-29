@@ -46,6 +46,7 @@ class Business(models.Model):
         on_delete=models.CASCADE,
         related_name='businesses'
     )
+    search_history = models.ManyToManyField(Search, related_name='historical_results')
   
     name = models.CharField(max_length=255)
     email = models.EmailField(null=True, blank=True)

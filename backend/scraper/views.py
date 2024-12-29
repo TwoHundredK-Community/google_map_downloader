@@ -38,12 +38,6 @@ class SearchViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """
         Create a new search and fetch results from Google Maps.
-        
-        This method:
-        1. Creates a new search record
-        2. Calls Google Maps API to get business data
-        3. Creates business records for each result
-        4. Updates the search with result count
         """
         try:
             with transaction.atomic():
@@ -54,33 +48,60 @@ class SearchViewSet(viewsets.ModelViewSet):
                 maps_service = GoogleMapsService()
                 
                 # Get search results
-                businesses = maps_service.search_places(search.query)
+                businesses_data = maps_service.search_places(search.query)
                 
-                # Create business records
-                business_objects = []
-                for business_data in businesses:
-                    business = Business(
-                        search=search,
-                        **business_data
-                    )
-                    business_objects.append(business)
+                # Lists to store new and existing businesses
+                new_business_objects = []
+                existing_businesses = []
                 
-                # Bulk create businesses
-                if business_objects:
-                    Business.objects.bulk_create(business_objects)
+                # Get existing businesses with place_ids from the new results
+                place_ids = [data['place_id'] for data in businesses_data]
+                existing_business_map = {
+                    b.place_id: b for b in Business.objects.filter(place_id__in=place_ids)
+                }
+                
+                # Process each business
+                for business_data in businesses_data:
+                    existing_business = existing_business_map.get(business_data['place_id'])
+                    
+                    if existing_business:
+                        # Add the new search to the existing business's search history
+                        existing_business.search_history.add(search)
+                        existing_businesses.append(existing_business)
+                    else:
+                        # Create new business
+                        new_business = Business(
+                            search=search,
+                            **business_data
+                        )
+                        new_business_objects.append(new_business)
+                
+                # Bulk create new businesses
+                created_businesses = []
+                if new_business_objects:
+                    created_businesses = Business.objects.bulk_create(new_business_objects)
+                    # Add the search to search_history for new businesses
+                    for business in created_businesses:
+                        business.search_history.add(search)
+                
+                # Combine all businesses for the response and refresh from db
+                all_businesses = list(Business.objects.filter(
+                    models.Q(id__in=[b.id for b in created_businesses]) |
+                    models.Q(id__in=[b.id for b in existing_businesses])
+                ).select_related('search').prefetch_related('search_history'))
                 
                 # Update search with results count
-                search.results_count = len(business_objects)
-                search.results.set(business_objects)
+                search.results_count = len(all_businesses)
+                search.results.set(all_businesses)
                 search.save()
 
                 # Return paginated results
-                page = self.paginate_queryset(business_objects)
+                page = self.paginate_queryset(all_businesses)
                 if page is not None:
                     serializer = BusinessSerializer(page, many=True)
                     return self.get_paginated_response(serializer.data)
 
-                serializer = BusinessSerializer(business_objects, many=True)
+                serializer = BusinessSerializer(all_businesses, many=True)
                 return Response(serializer.data)
                 
         except Exception as e:
