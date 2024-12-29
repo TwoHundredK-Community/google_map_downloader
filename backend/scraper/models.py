@@ -81,6 +81,10 @@ class Business(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    instagram_link = models.URLField(max_length=500, blank=True, null=True)
+    youtube_link = models.URLField(max_length=500, blank=True, null=True)
+    twitter_link = models.URLField(max_length=500, blank=True, null=True)
+    facebook_link = models.URLField(max_length=500, blank=True, null=True)
 
     class Meta:
         ordering = ['-created_at']

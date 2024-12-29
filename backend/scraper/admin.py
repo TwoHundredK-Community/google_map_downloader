@@ -12,9 +12,9 @@ class SearchAdmin(admin.ModelAdmin):
 
 @admin.register(Business)
 class BusinessAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'email', 'phone', 'category', 'rating', 'created_at', 'place_id')
+    list_display = ('id', 'name', 'email', 'phone', 'category', 'rating', 'created_at', 'place_id', 'instagram_link', 'youtube_link', 'twitter_link', 'facebook_link')
     list_filter = ('category', 'rating', 'created_at')
-    search_fields = ('name', 'email', 'phone', 'address', 'place_id', 'uuid')
+    search_fields = ('name', 'email', 'phone', 'address', 'place_id', 'uuid', 'instagram_link', 'youtube_link', 'twitter_link', 'facebook_link')
     ordering = ('-created_at',)
     readonly_fields = ('uuid', 'created_at', 'updated_at')
     fieldsets = (

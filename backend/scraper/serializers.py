@@ -21,7 +21,11 @@ class BusinessSerializer(serializers.ModelSerializer):
             'address', 'category', 'rating', 'reviews_count',
             'latitude', 'longitude', 'place_id',
             'created_at', 'updated_at',
-            'search_history'
+            'search_history',
+            'instagram_link',
+            'youtube_link',
+            'twitter_link',
+            'facebook_link',
         ]
         read_only_fields = ['id', 'uuid', 'created_at', 'updated_at']
 
