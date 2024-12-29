@@ -34,7 +34,6 @@ class GoogleMapsService:
             place_details = self.client.place(place['place_id'])['result']
             
             business = {
-                'business_id': place['place_id'],
                 'name': place.get('name', ''),
                 'place_id': place['place_id'],
                 'address': place.get('formatted_address', ''),

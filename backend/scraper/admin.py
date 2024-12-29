@@ -3,7 +3,7 @@ from .models import Search, Business
 
 @admin.register(Search)
 class SearchAdmin(admin.ModelAdmin):
-    list_display = ('query', 'user', 'results_count', 'timestamp')
+    list_display = ('id', 'query', 'user', 'results_count', 'timestamp')
     list_filter = ('timestamp',)
     search_fields = ('query', 'user__email')
     ordering = ('-timestamp',)
@@ -12,14 +12,14 @@ class SearchAdmin(admin.ModelAdmin):
 
 @admin.register(Business)
 class BusinessAdmin(admin.ModelAdmin):
-    list_display = ('name', 'email', 'phone', 'category', 'rating', 'created_at')
+    list_display = ('id', 'name', 'email', 'phone', 'category', 'rating', 'created_at', 'place_id')
     list_filter = ('category', 'rating', 'created_at')
-    search_fields = ('name', 'email', 'phone', 'address', 'business_id', 'place_id', 'uuid')
+    search_fields = ('name', 'email', 'phone', 'address', 'place_id', 'uuid')
     ordering = ('-created_at',)
     readonly_fields = ('uuid', 'created_at', 'updated_at')
     fieldsets = (
         ('Basic Information', {
-            'fields': ('uuid', 'search', 'name', 'category', 'business_id', 'place_id')
+            'fields': ('uuid', 'search', 'name', 'category', 'place_id')
         }),
         ('Contact Information', {
             'fields': ('email', 'phone', 'website', 'address')

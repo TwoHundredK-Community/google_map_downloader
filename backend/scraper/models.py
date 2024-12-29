@@ -45,11 +45,7 @@ class Business(models.Model):
         on_delete=models.CASCADE,
         related_name='businesses'
     )
-    business_id = models.CharField(
-        max_length=100,
-        unique=True,
-        help_text='Unique identifier from Google Maps'
-    )
+  
     name = models.CharField(max_length=255)
     email = models.EmailField(null=True, blank=True)
     website = models.URLField(null=True, blank=True)
@@ -89,7 +85,6 @@ class Business(models.Model):
         verbose_name_plural = 'businesses'
         indexes = [
             models.Index(fields=['-created_at']),
-            models.Index(fields=['business_id']),
             models.Index(fields=['search']),
             models.Index(fields=['uuid']),
         ]

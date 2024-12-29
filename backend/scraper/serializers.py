@@ -5,7 +5,7 @@ class BusinessSerializer(serializers.ModelSerializer):
     class Meta:
         model = Business
         fields = [
-            'id', 'uuid', 'business_id', 'name', 'email', 'website', 'phone',
+            'id', 'uuid', 'name', 'email', 'website', 'phone',
             'address', 'category', 'rating', 'reviews_count',
             'latitude', 'longitude', 'place_id',
             'created_at', 'updated_at'
