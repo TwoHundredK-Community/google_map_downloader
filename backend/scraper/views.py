@@ -71,6 +71,7 @@ class SearchViewSet(viewsets.ModelViewSet):
                 
                 # Update search with results count
                 search.results_count = len(business_objects)
+                search.results.set(business_objects)
                 search.save()
 
                 # Return paginated results

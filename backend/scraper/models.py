@@ -19,6 +19,7 @@ class Search(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     results_count = models.IntegerField(default=0)
     last_updated = models.DateTimeField(auto_now=True)
+    results = models.ManyToManyField('Business', related_name='searches', blank=True)
 
     class Meta:
         ordering = ['-timestamp']
