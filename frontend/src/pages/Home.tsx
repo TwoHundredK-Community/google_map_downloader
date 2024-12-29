@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Row, Col, Pagination, Button, Input, Table, message } from 'antd';
-import { SearchOutlined, DownloadOutlined } from '@ant-design/icons';
+import { Button, Input, Table, message } from 'antd';
+import { SearchOutlined, DownloadOutlined, HistoryOutlined } from '@ant-design/icons';
 import api from '../services/api';
+import { SearchHistoryDrawer } from "../components/SearchHistoryDrawer"
 
 interface Business {
   id: string;
@@ -17,6 +18,14 @@ interface SearchResponse {
   next: string | null;
   previous: string | null;
   results: Business[];
+}
+
+interface SearchHistoryItem {
+  id: number;
+  query: string;
+  location: string;
+  timestamp: string;
+  resultCount: number;
 }
 
 const columns = [
@@ -52,25 +61,23 @@ const columns = [
   },
 ];
 
-const Home = () => {
+export default function Home() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
   const pageSize = 50;
+  const [isHistoryDrawerOpen, setIsHistoryDrawerOpen] = useState(false)
+  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([])
 
-  const handleSearch = async (page: number = 1) => {
-    if (!searchQuery.trim()) {
-      message.warning('Please enter a search query');
-      return;
-    }
-
-    setLoading(true);
+  const handleSearch = async (query: string, location: string) => {
     try {
+      setLoading(true)
       const response = await api.post<SearchResponse>('/scraper/searches/', {
-        query: searchQuery,
-        page,
+        query,
+        location,
+        page: currentPage,
         page_size: pageSize
       });
 
@@ -78,6 +85,16 @@ const Home = () => {
         setBusinesses(response.data.results);
         setTotal(response.data.count);
         message.success(`Found ${response.data.count} businesses`);
+
+        // Add to search history
+        const historyItem = {
+          id: Date.now(),
+          query,
+          location,
+          timestamp: new Date().toISOString(),
+          resultCount: response.data.results.length,
+        }
+        setSearchHistory((prev) => [historyItem, ...prev].slice(0, 10)) // Keep last 10 searches
       }
     } catch (error: any) {
       console.error('Search error:', error);
@@ -89,15 +106,22 @@ const Home = () => {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    handleSearch(page);
+    handleSearch(searchQuery, '');
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       setCurrentPage(1); // Reset to first page on new search
-      handleSearch(1);
+      handleSearch(searchQuery, '');
     }
   };
+
+  const handleHistoryItemClick = async (query: string, location: string) => {
+    setSearchQuery(query)
+    setIsHistoryDrawerOpen(false)
+    // Trigger the search
+    await handleSearch(query, location)
+  }
 
   return (
     <div className="space-y-6">
@@ -125,11 +149,18 @@ const Home = () => {
               className="bg-primary-500"
               onClick={() => {
                 setCurrentPage(1);
-                handleSearch(1);
+                handleSearch(searchQuery, '');
               }}
               loading={loading}
             >
               Search
+            </Button>
+            <Button
+              icon={<HistoryOutlined />}
+              onClick={() => setIsHistoryDrawerOpen(true)}
+              aria-label="Search History"
+            >
+              History
             </Button>
           </div>
         </div>
@@ -165,8 +196,13 @@ const Home = () => {
           loading={loading}
         />
       </div>
+
+      <SearchHistoryDrawer
+        isOpen={isHistoryDrawerOpen}
+        onClose={() => setIsHistoryDrawerOpen(false)}
+        searchHistory={searchHistory}
+        onHistoryItemClick={handleHistoryItemClick}
+      />
     </div>
   );
-};
-
-export default Home; 
+} 
