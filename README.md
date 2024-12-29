@@ -123,4 +123,4 @@ The API documentation is available at `/api/docs/` when the server is running. I
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. 
